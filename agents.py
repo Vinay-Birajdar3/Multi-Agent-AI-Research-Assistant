@@ -1,4 +1,3 @@
-from langchain.agents import create_agent
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -13,20 +12,40 @@ llm = ChatGroq(
   temperature = 0,
 )
 
-# creating first agent
+# creating first agent - bind tools and call directly
 def build_search_agent():
-  return create_agent(
-    model = llm,
-    tools = [web_search]
-  )
+  llm_with_tools = llm.bind_tools([web_search])
+  
+  def search_runner(query):
+    messages = [("user", query)]
+    response = llm_with_tools.invoke(messages)
+    # Extract tool use and execute
+    if hasattr(response, 'tool_calls') and response.tool_calls:
+      for tool_call in response.tool_calls:
+        if tool_call['name'] == 'web_search':
+          result = web_search.invoke(tool_call['args']['query'])
+          return result
+    return str(response)
+  
+  return search_runner
   
 # creating second agent
 
 def build_reader_agent():
-  return create_agent(
-    model = llm,
-    tools = [scrape_url]
-  )
+  llm_with_tools = llm.bind_tools([scrape_url])
+  
+  def reader_runner(url):
+    messages = [("user", url)]
+    response = llm_with_tools.invoke(messages)
+    # Extract tool use and execute
+    if hasattr(response, 'tool_calls') and response.tool_calls:
+      for tool_call in response.tool_calls:
+        if tool_call['name'] == 'scrape_url':
+          result = scrape_url.invoke(tool_call['args']['url'])
+          return result
+    return str(response)
+  
+  return reader_runner
   
 # writer chain: we will use LCEL pipline/ Runnables
 

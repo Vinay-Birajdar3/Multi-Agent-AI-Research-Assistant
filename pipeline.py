@@ -1,6 +1,6 @@
 from agents import build_reader_agent, build_search_agent, writer_chain, critic_chain
 
-def run_research_pipeline(toipc: str) -> dict: # using dict to save output of tool and agent in aprticular state
+def run_research_pipeline(topic: str) -> dict: # using dict to save output of tool and agent in aprticular state
   
   state = {} # local storage to store the result of 1st agent and 2nd too
   
@@ -10,20 +10,9 @@ def run_research_pipeline(toipc: str) -> dict: # using dict to save output of to
   print("="*50)
   
   search_agent = build_search_agent()
-  search_result = search_agent.invoke({
-    "messages": [
-        ("user",
-         f"Find recent, reliable and detailed information about: {topic}")
-    ]
-})
+  search_result = search_agent(f"Find recent, reliable and detailed information about: {topic}")
 
-  tool_output = None
-
-  for msg in search_result["messages"]:
-      if msg.type == "tool":
-          tool_output = msg.content
-
-  state["search_results"] = tool_output
+  state["search_results"] = search_result if search_result else "No results found"
 
   print(state["search_results"])
   
@@ -33,15 +22,10 @@ def run_research_pipeline(toipc: str) -> dict: # using dict to save output of to
   print("="*50)
   
   reader_agent = build_reader_agent()
-  reader_result = reader_agent.invoke({
-    "messages": [("user",
-                  f"Based on the following result about '{topic}',"
-                  f"pick the most relevant URL nad scrape it for deeper content.\n\n"
-                  f"Search Results:\n{state['search_results'][:800]}"
-      )]
-  })
+  # Extract a URL if available from search results
+  reader_result = reader_agent(f"Based on the following result about '{topic}', pick the most relevant URL and scrape it for deeper content.\n\nSearch Results:\n{state['search_results'][:800]}")
   
-  state['scraped_content'] = reader_result['messages'][-1].content
+  state['scraped_content'] = reader_result if reader_result else "No content scraped"
   
   print("\nscraped content\n", state['scraped_content'])  
   

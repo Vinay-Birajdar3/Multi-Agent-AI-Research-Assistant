@@ -5,9 +5,17 @@ from dotenv import load_dotenv
 from tavily import TavilyClient
 import os
 from rich import print
+import streamlit as st
+
 load_dotenv()
 
-tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+# Get API key from Streamlit secrets (for cloud) or environment variables (for local)
+try:
+    tavily_api_key = st.secrets["TAVILY_API_KEY"]
+except (KeyError, FileNotFoundError):
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+
+tavily = TavilyClient(api_key=tavily_api_key)
 
 #tool 1
 @tool

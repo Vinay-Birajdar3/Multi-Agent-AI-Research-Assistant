@@ -4,12 +4,21 @@ from langchain_core.output_parsers import StrOutputParser
 from tool import web_search, scrape_url
 import os
 from dotenv import load_dotenv
+import streamlit as st
 
+# Load environment variables for local development
 load_dotenv()
+
+# Get API key from Streamlit secrets (for cloud) or environment variables (for local)
+try:
+    groq_api_key = st.secrets["GROQ_API_KEY"]
+except (KeyError, FileNotFoundError):
+    groq_api_key = os.getenv("GROQ_API_KEY")
 
 llm = ChatGroq(
   model = "llama-3.1-8b-instant",
   temperature = 0,
+  api_key = groq_api_key
 )
 
 # creating first agent - bind tools and call directly

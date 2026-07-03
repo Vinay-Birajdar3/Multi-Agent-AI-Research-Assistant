@@ -147,7 +147,7 @@ streamlit run app.py
 
 # Author
 
-Sankalp Kale
+Vinay Birajdar & Sankalp Kale
 
 ---
 
